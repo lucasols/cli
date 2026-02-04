@@ -11,6 +11,7 @@ const [, , cmdFromTerminal, ...cmdArgs] = process.argv;
 type Cmd = {
   short?: string;
   description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- internal type
   run: (...args: any[]) => Promise<void> | void;
   args?: Record<string, Arg>;
   examples?: {
@@ -19,7 +20,21 @@ type Cmd = {
   }[];
 };
 
-type PositionalArg =
+/**
+ * Positional argument definition for CLI commands.
+ *
+ * Positional arguments are parsed in the order they are defined in the `args` object.
+ *
+ * @example
+ * ```ts
+ * // String positional arg (required)
+ * { type: 'positional-string', name: 'filename', description: 'File to process' }
+ *
+ * // Number positional arg with default (optional)
+ * { type: 'positional-number', name: 'port', description: 'Port number', default: 3000 }
+ * ```
+ */
+export type PositionalArg =
   | {
       type: 'positional-string';
       name: string;
@@ -33,7 +48,28 @@ type PositionalArg =
       description: string;
     };
 
-type Arg =
+/**
+ * Argument definition for CLI commands.
+ *
+ * Supports positional arguments, boolean flags, and value flags.
+ *
+ * **Argument Types:**
+ * - `positional-string` - Required string argument (optional if `default` is provided)
+ * - `positional-number` - Required number argument (optional if `default` is provided)
+ * - `flag` - Boolean flag (`--verbose`), defaults to `false`
+ * - `value-string-flag` - Flag with string value (`--config file.json`)
+ * - `value-number-flag` - Flag with number value (`--port 8080`)
+ *
+ * @example
+ * ```ts
+ * const args = {
+ *   name: { type: 'positional-string', name: 'name', description: 'Project name' },
+ *   port: { type: 'value-number-flag', name: 'port', description: 'Port', default: 3000 },
+ *   verbose: { type: 'flag', name: 'verbose', description: 'Verbose output' },
+ * };
+ * ```
+ */
+export type Arg =
   | PositionalArg
   | {
       type: 'flag';
@@ -75,6 +111,55 @@ type GetArgType<T extends Arg> =
     : number | undefined
   : never;
 
+/**
+ * Creates a type-safe command definition for use with `createCLI`.
+ *
+ * The `run` function receives fully typed arguments based on the `args` definition.
+ * Positional arguments are parsed in declaration order.
+ *
+ * @template Args - Record of argument definitions
+ * @param options - Command configuration
+ * @param options.description - Command description shown in help
+ * @param options.short - Optional single-character alias (cannot be 'i' or 'h')
+ * @param options.args - Typed argument definitions
+ * @param options.run - Handler function receiving parsed arguments
+ * @param options.examples - Optional usage examples for help text
+ * @returns Command definition object
+ *
+ * @example
+ * ```ts
+ * const deploy = createCmd({
+ *   short: 'd',
+ *   description: 'Deploy the application',
+ *   args: {
+ *     env: {
+ *       type: 'positional-string',
+ *       name: 'env',
+ *       description: 'Target environment',
+ *     },
+ *     port: {
+ *       type: 'value-number-flag',
+ *       name: 'port',
+ *       description: 'Port number',
+ *       default: 3000,
+ *     },
+ *     verbose: {
+ *       type: 'flag',
+ *       name: 'verbose',
+ *       description: 'Enable verbose logging',
+ *     },
+ *   },
+ *   examples: [
+ *     { args: ['production'], description: 'Deploy to production' },
+ *     { args: ['staging', '--port', '8080'], description: 'Deploy to staging on port 8080' },
+ *   ],
+ *   run: async ({ env, port, verbose }) => {
+ *     // env: string, port: number, verbose: boolean
+ *     console.log(`Deploying to ${env} on port ${port}`);
+ *   },
+ * });
+ * ```
+ */
 export function createCmd<Args extends undefined | Record<string, Arg>>({
   short,
   description,
@@ -102,6 +187,57 @@ export function createCmd<Args extends undefined | Record<string, Arg>>({
   };
 }
 
+/**
+ * Creates and runs a CLI application with the given commands.
+ *
+ * Automatically handles argument parsing, help generation, and interactive mode.
+ *
+ * **Built-in commands:**
+ * - `h` or `--help` - Shows help with all commands
+ * - `i` - Interactive mode (select command from list)
+ * - `<command> -h` - Shows help for a specific command
+ *
+ * @template C - String literal union of command names
+ * @param options - CLI configuration
+ * @param options.name - CLI display name shown in header
+ * @param options.baseCmd - Command prefix for help text (e.g., 'my-cli')
+ * @param options.sort - Optional array to customize command display order
+ * @param cmds - Record of command definitions created with `createCmd`
+ *
+ * @example
+ * ```ts
+ * await createCLI(
+ *   { name: 'My CLI', baseCmd: 'my-cli' },
+ *   {
+ *     hello: createCmd({
+ *       short: 'hi',
+ *       description: 'Say hello',
+ *       run: async () => console.log('Hello!'),
+ *     }),
+ *     deploy: createCmd({
+ *       short: 'd',
+ *       description: 'Deploy the app',
+ *       args: {
+ *         env: { type: 'positional-string', name: 'env', description: 'Environment' },
+ *       },
+ *       run: async ({ env }) => console.log(`Deploying to ${env}`),
+ *     }),
+ *   },
+ * );
+ * ```
+ *
+ * @example
+ * ```bash
+ * # Usage examples:
+ * my-cli              # Show interactive menu
+ * my-cli h            # Show help
+ * my-cli i            # Interactive mode
+ * my-cli hello        # Run hello command
+ * my-cli hi           # Run hello via short alias
+ * my-cli deploy prod  # Run deploy with argument
+ * my-cli deploy -h    # Show deploy command help
+ * ```
+ */
 export async function createCLI<C extends string>(
   {
     name,

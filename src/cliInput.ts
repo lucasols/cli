@@ -65,17 +65,79 @@ async function withEscapeSupport<T>(
   }
 }
 
+/**
+ * Validation function for text inputs.
+ *
+ * @param value - The current input value to validate
+ * @returns `true` if valid, `false` if invalid, or a string error message
+ *
+ * @example
+ * ```ts
+ * const validate: ValidateFn = (value) => {
+ *   if (value.length < 3) return 'Must be at least 3 characters';
+ *   return true;
+ * };
+ * ```
+ */
 export type ValidateFn = (
   value: string,
 ) => boolean | string | Promise<boolean | string>;
 
+/**
+ * Option configuration for select and autocomplete prompts.
+ *
+ * @template T - The string literal type for the option value
+ *
+ * @example
+ * ```ts
+ * const options: SelectOption<'dev' | 'prod'>[] = [
+ *   { value: 'dev', label: 'Development', hint: 'Local environment' },
+ *   { value: 'prod', label: 'Production' },
+ * ];
+ * ```
+ */
 export type SelectOption<T extends string> = {
+  /** The value returned when this option is selected */
   value: T;
+  /** Display text shown to the user (defaults to value if not provided) */
   label?: string;
+  /** Additional description or help text for the option */
   hint?: string;
 };
 
+/**
+ * Interactive CLI input utilities with ESC-to-cancel support.
+ *
+ * All prompts exit the process with code 0 when the user presses ESC or Ctrl+C.
+ *
+ * @example
+ * ```ts
+ * import { cliInput } from '@ls-stack/cli';
+ *
+ * const name = await cliInput.text('Enter your name');
+ * const confirm = await cliInput.confirm('Proceed?', { initial: true });
+ * ```
+ */
 export const cliInput = {
+  /**
+   * Single selection prompt from a list of options.
+   *
+   * @template T - String literal union type of option values
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration object containing the selectable options
+   * @returns The value of the selected option
+   *
+   * @example
+   * ```ts
+   * const env = await cliInput.select('Select environment', {
+   *   options: [
+   *     { value: 'dev', label: 'Development', hint: 'Local server' },
+   *     { value: 'prod', label: 'Production' },
+   *   ],
+   * });
+   * // env: 'dev' | 'prod'
+   * ```
+   */
   select: async <T extends string>(
     title: string,
     { options }: { options: SelectOption<T>[] },
@@ -99,6 +161,28 @@ export const cliInput = {
     }
   },
 
+  /**
+   * Text input with autocomplete suggestions.
+   *
+   * Searches across option values, labels, and hints (case-insensitive).
+   * Allows free-form text input with optional validation.
+   *
+   * @template T - String literal union type of option values
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration with autocomplete options and optional validation
+   * @returns The selected or entered value
+   *
+   * @example
+   * ```ts
+   * const framework = await cliInput.textWithAutocomplete('Select framework', {
+   *   options: [
+   *     { value: 'react', label: 'React', hint: 'UI library' },
+   *     { value: 'vue', label: 'Vue', hint: 'Progressive framework' },
+   *   ],
+   *   validate: (v) => v.length > 0 || 'Required',
+   * });
+   * ```
+   */
   textWithAutocomplete: async <T extends string>(
     title: string,
     {
@@ -139,6 +223,21 @@ export const cliInput = {
     }
   },
 
+  /**
+   * Text input prompt with optional default value and validation.
+   *
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration with optional initial value and validation
+   * @returns The entered text
+   *
+   * @example
+   * ```ts
+   * const name = await cliInput.text('Project name', {
+   *   initial: 'my-project',
+   *   validate: (v) => /^[a-z0-9-]+$/.test(v) || 'Invalid name',
+   * });
+   * ```
+   */
   text: async (
     title: string,
     {
@@ -161,6 +260,20 @@ export const cliInput = {
     }
   },
 
+  /**
+   * Yes/No confirmation prompt.
+   *
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration with optional default value
+   * @returns `true` for yes, `false` for no
+   *
+   * @example
+   * ```ts
+   * const proceed = await cliInput.confirm('Deploy to production?', {
+   *   initial: false,
+   * });
+   * ```
+   */
   confirm: async (
     title: string,
     { initial }: { initial?: boolean } = {},
@@ -174,6 +287,28 @@ export const cliInput = {
     }
   },
 
+  /**
+   * Multi-select prompt with checkboxes.
+   *
+   * Requires at least one option to be selected.
+   *
+   * @template T - String literal union type of option values
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration object containing the selectable options
+   * @returns Array of selected option values
+   *
+   * @example
+   * ```ts
+   * const features = await cliInput.multipleSelect('Enable features', {
+   *   options: [
+   *     { value: 'typescript', label: 'TypeScript' },
+   *     { value: 'eslint', label: 'ESLint' },
+   *     { value: 'prettier', label: 'Prettier' },
+   *   ],
+   * });
+   * // features: ('typescript' | 'eslint' | 'prettier')[]
+   * ```
+   */
   multipleSelect: async <T extends string>(
     title: string,
     { options }: { options: SelectOption<T>[] },
@@ -198,6 +333,23 @@ export const cliInput = {
     }
   },
 
+  /**
+   * Numeric input prompt.
+   *
+   * Returns `null` on non-cancellation errors (cancellation exits the process).
+   *
+   * @param title - The prompt message displayed to the user
+   * @param options - Configuration with optional default value
+   * @returns The entered number, or `null` on error
+   *
+   * @example
+   * ```ts
+   * const port = await cliInput.number('Enter port', { initial: 3000 });
+   * if (port !== null) {
+   *   console.log(`Using port ${port}`);
+   * }
+   * ```
+   */
   number: async (
     title: string,
     { initial }: { initial?: number } = {},
