@@ -8,8 +8,8 @@
     "lint": "pnpm tsc && pnpm eslint",
     "tsc": "tsc -p tsconfig.prod.json",
     "eslint": "CI=true eslint src/ scripts/ --color --max-warnings=0",
-    "build": "pnpm lint && tsup",
-    "build:no-test": "tsup"
+    "build": "pnpm lint && tsdown",
+    "build:no-test": "tsdown"
   },
   "files": [
     "dist"
@@ -18,11 +18,11 @@
   "author": "Lucas Santos",
   "type": "module",
   "main": "./dist/main.cjs",
-  "module": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "module": "./dist/main.mjs",
+  "types": "./dist/main.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/main.js",
+      "import": "./dist/main.mjs",
       "require": "./dist/main.cjs"
     }
   },
@@ -32,11 +32,13 @@
   },
   "devDependencies": {
     "@ls-stack/eslint-cfg": "^0.5.1",
+    "@ls-stack/utils": "^3.68.0",
     "@types/node": "^24.7.1",
     "prettier": "3.6.2",
-    "tsup": "^8.5.0",
+    "tsdown": "^0.20.2",
     "tsx": "^4.19.4",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.5.1"
