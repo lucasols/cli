@@ -1,0 +1,44 @@
+{
+  "name": "@ls-stack/cli",
+  "description": "CLI input utilities for interactive prompts",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "test": "tsx scripts/test-cli.ts",
+    "lint": "pnpm tsc && pnpm eslint",
+    "tsc": "tsc -p tsconfig.prod.json",
+    "eslint": "CI=true eslint src/ scripts/ --color --max-warnings=0",
+    "build": "pnpm lint && tsup",
+    "build:no-test": "tsup"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": "github:lucasols/cli",
+  "author": "Lucas Santos",
+  "type": "module",
+  "main": "./dist/main.cjs",
+  "module": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/main.js",
+      "require": "./dist/main.cjs"
+    }
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=21.5.0"
+  },
+  "devDependencies": {
+    "@ls-stack/eslint-cfg": "^0.5.1",
+    "@types/node": "^24.7.1",
+    "prettier": "3.6.2",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.4",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.5.1"
+  }
+}
