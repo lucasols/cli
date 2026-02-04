@@ -124,11 +124,19 @@ export async function createCLI<C extends string>(
   console.info(styleText(['blue', 'bold'], name));
 
   const addedShortCmds = new Set<string>();
+  const reservedShortCmds = ['i', 'h'];
 
   let runCmdId: C | undefined = cmdFromTerminal as C | undefined;
 
   for (const [, cmd] of typedObjectEntries(cmds)) {
     if (cmd.short) {
+      if (reservedShortCmds.includes(cmd.short)) {
+        console.error(
+          styleText(['red', 'bold'], `Short cmd "${cmd.short}" is reserved for built-in commands`),
+        );
+        process.exit(1);
+      }
+
       if (addedShortCmds.has(cmd.short)) {
         console.error(
           styleText(['red', 'bold'], `Short cmd "${cmd.short}" is duplicated`),
@@ -352,7 +360,9 @@ export async function createCLI<C extends string>(
     
     // Initialize with defaults
     argEntries.forEach(([key, argDef]) => {
-      if ('default' in argDef && argDef.default !== undefined) {
+      if (argDef.type === 'flag') {
+        parsed[key] = false;
+      } else if ('default' in argDef && argDef.default !== undefined) {
         parsed[key] = argDef.default;
       }
     });
@@ -426,6 +436,14 @@ export async function createCLI<C extends string>(
       }
     }
 
+    // Validate required positional arguments
+    for (const [key, argDef] of positionalArgs) {
+      if (!('default' in argDef) && parsed[key] === undefined) {
+        console.error(styleText(['red', 'bold'], `Error: Missing required argument <${argDef.name}>`));
+        process.exit(1);
+      }
+    }
+
     return parsed;
   }
 
@@ -456,6 +474,15 @@ export async function createCLI<C extends string>(
   }
 
   if (runCmdId === 'i') {
+    function hasRequiredArgs(args?: Record<string, Arg>): boolean {
+      if (!args) return false;
+      return typedObjectEntries(args).some(
+        ([, arg]) =>
+          (arg.type === 'positional-string' || arg.type === 'positional-number') &&
+          !('default' in arg),
+      );
+    }
+
     let cmdEntries = typedObjectEntries(cmds);
 
     if (sort) {
@@ -464,8 +491,10 @@ export async function createCLI<C extends string>(
       );
     }
 
+    const availableCmds = cmdEntries.filter(([, cmd]) => !hasRequiredArgs(cmd.args));
+
     const response = await cliInput.select('Select a command', {
-      options: cmdEntries.map(([cmd, { short, description }]) => ({
+      options: availableCmds.map(([cmd, { short, description }]) => ({
         value: cmd,
         label: short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd,
         hint: description,

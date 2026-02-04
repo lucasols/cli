@@ -408,4 +408,18 @@ describe('createCLI', () => {
     });
   });
 
+  describe('Reserved Short Commands', () => {
+    it('should show error when using reserved short command "i"', () => {
+      const result = runCLI('reserved-short-cli.ts', ['i', '-h']);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Short cmd "i" is reserved for built-in commands');
+    });
+
+    it('should show error when using reserved short command "h"', () => {
+      const result = runCLI('reserved-short-cli.ts', ['h', '-h']);
+      expect(result.exitCode).toBe(1);
+      expect(result.stderr).toContain('Short cmd "h" is reserved for built-in commands');
+    });
+  });
+
 });
