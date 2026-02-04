@@ -99,9 +99,12 @@ export const cliInput = {
     }
   },
 
-  selectWithSearch: async <T extends string>(
+  textWithAutocomplete: async <T extends string>(
     title: string,
-    { options }: { options: SelectOption<T>[] },
+    {
+      options,
+      validate,
+    }: { options: SelectOption<T>[]; validate?: ValidateFn },
   ): Promise<T> => {
     try {
       const choices = options.map((option) => ({
@@ -122,9 +125,11 @@ export const cliInput = {
               return choices.filter(
                 (c) =>
                   c.name.toLowerCase().includes(lowerTerm) ||
-                  c.value.toLowerCase().includes(lowerTerm),
+                  c.value.toLowerCase().includes(lowerTerm) ||
+                  c.description?.toLowerCase().includes(lowerTerm),
               );
             },
+            validate,
           },
           { signal },
         ),
