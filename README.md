@@ -198,6 +198,214 @@ const port = await cliInput.number('Enter port number', {
 
 **Returns:** `Promise<number | null>` - The entered number, or `null` on error
 
+---
+
+## CLI Framework
+
+Build complete CLI applications with typed commands, automatic help generation, and interactive mode.
+
+### Quick Start
+
+```typescript
+import { createCLI, createCmd } from '@ls-stack/cli';
+
+await createCLI(
+  { name: 'My CLI', baseCmd: 'my-cli' },
+  {
+    hello: createCmd({
+      short: 'hi',
+      description: 'Say hello',
+      run: async () => {
+        console.log('Hello, World!');
+      },
+    }),
+  },
+);
+```
+
+### Argument Types
+
+```typescript
+type Arg =
+  | { type: 'positional-string'; name: string; description: string; default?: string }
+  | { type: 'positional-number'; name: string; description: string; default?: number }
+  | { type: 'flag'; name: string; description: string }
+  | { type: 'value-string-flag'; name: string; description: string; default?: string }
+  | { type: 'value-number-flag'; name: string; description: string; default?: number };
+```
+
+| Type                 | CLI Usage              | TypeScript Type                                   |
+| -------------------- | ---------------------- | ------------------------------------------------- |
+| `positional-string`  | `my-cli cmd value`     | `string` (or `string \| undefined` if no default) |
+| `positional-number`  | `my-cli cmd 42`        | `number` (or `number \| undefined` if no default) |
+| `flag`               | `my-cli cmd --verbose` | `boolean` (defaults to `false`)                   |
+| `value-string-flag`  | `my-cli cmd --env dev` | `string \| undefined` (or `string` if default)    |
+| `value-number-flag`  | `my-cli cmd --port 80` | `number \| undefined` (or `number` if default)    |
+
+### `createCmd()`
+
+Creates a type-safe command definition.
+
+```typescript
+const deploy = createCmd({
+  short: 'd',
+  description: 'Deploy the application',
+  args: {
+    env: {
+      type: 'positional-string',
+      name: 'env',
+      description: 'Target environment',
+    },
+    port: {
+      type: 'value-number-flag',
+      name: 'port',
+      description: 'Port number',
+      default: 3000,
+    },
+    verbose: {
+      type: 'flag',
+      name: 'verbose',
+      description: 'Enable verbose logging',
+    },
+  },
+  examples: [
+    { args: ['production'], description: 'Deploy to production' },
+    { args: ['staging', '--port', '8080'], description: 'Deploy to staging on port 8080' },
+  ],
+  run: async ({ env, port, verbose }) => {
+    // Types are inferred: env: string, port: number, verbose: boolean
+    console.log(`Deploying to ${env} on port ${port}`);
+    if (verbose) console.log('Verbose mode enabled');
+  },
+});
+```
+
+**Parameters:**
+
+| Name          | Type                          | Description                                    |
+| ------------- | ----------------------------- | ---------------------------------------------- |
+| `description` | `string`                      | Command description shown in help              |
+| `short`       | `string?`                     | Single-character alias (cannot be 'i' or 'h')  |
+| `args`        | `Record<string, Arg>?`        | Typed argument definitions                     |
+| `run`         | `(args) => void \| Promise`   | Handler function receiving parsed arguments    |
+| `examples`    | `{ args, description }[]?`    | Usage examples for help text                   |
+
+### `createCLI()`
+
+Creates and runs a CLI application.
+
+```typescript
+await createCLI(
+  {
+    name: 'My CLI',
+    baseCmd: 'my-cli',
+    sort: ['deploy', 'build', 'test'], // Optional: custom command order
+  },
+  {
+    deploy: deployCmd,
+    build: buildCmd,
+    test: testCmd,
+  },
+);
+```
+
+**Parameters:**
+
+| Name           | Type              | Description                           |
+| -------------- | ----------------- | ------------------------------------- |
+| `name`         | `string`          | CLI display name shown in header      |
+| `baseCmd`      | `string`          | Command prefix for help text          |
+| `sort`         | `string[]?`       | Custom command display order          |
+| `cmds`         | `Record<C, Cmd>`  | Commands created with `createCmd`     |
+
+### Built-in Commands
+
+| Command            | Description                              |
+| ------------------ | ---------------------------------------- |
+| `h`, `--help`      | Show help with all commands              |
+| `i`                | Interactive mode (select from list)      |
+| `<command> -h`     | Show help for a specific command         |
+
+### CLI Usage Examples
+
+```bash
+my-cli                    # Show interactive menu
+my-cli h                  # Show help
+my-cli --help             # Show help
+my-cli i                  # Interactive mode
+my-cli deploy prod        # Run deploy with positional arg
+my-cli d prod             # Run deploy via short alias
+my-cli deploy -h          # Show deploy command help
+my-cli deploy prod --port 8080 --verbose
+```
+
+### Complete Example
+
+```typescript
+import { createCLI, createCmd } from '@ls-stack/cli';
+
+await createCLI(
+  { name: 'Project CLI', baseCmd: 'project' },
+  {
+    create: createCmd({
+      short: 'c',
+      description: 'Create a new project',
+      args: {
+        name: {
+          type: 'positional-string',
+          name: 'name',
+          description: 'Project name',
+        },
+        template: {
+          type: 'value-string-flag',
+          name: 'template',
+          description: 'Project template',
+          default: 'basic',
+        },
+      },
+      examples: [
+        { args: ['my-app'], description: 'Create with default template' },
+        { args: ['my-app', '--template', 'react'], description: 'Create React project' },
+      ],
+      run: async ({ name, template }) => {
+        console.log(`Creating ${name} with template: ${template}`);
+      },
+    }),
+
+    build: createCmd({
+      short: 'b',
+      description: 'Build the project',
+      args: {
+        watch: {
+          type: 'flag',
+          name: 'watch',
+          description: 'Watch for changes',
+        },
+      },
+      run: async ({ watch }) => {
+        console.log(watch ? 'Building in watch mode...' : 'Building...');
+      },
+    }),
+
+    serve: createCmd({
+      short: 's',
+      description: 'Start development server',
+      args: {
+        port: {
+          type: 'value-number-flag',
+          name: 'port',
+          description: 'Port number',
+          default: 3000,
+        },
+      },
+      run: async ({ port }) => {
+        console.log(`Server running on http://localhost:${port}`);
+      },
+    }),
+  },
+);
+```
+
 ## Features
 
 ### ESC-to-Cancel

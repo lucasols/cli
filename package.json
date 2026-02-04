@@ -17,13 +17,14 @@
   "repository": "github:lucasols/cli",
   "author": "Lucas Santos",
   "type": "module",
-  "main": "./dist/main.cjs",
   "module": "./dist/main.mjs",
   "types": "./dist/main.d.mts",
   "exports": {
     ".": {
-      "import": "./dist/main.mjs",
-      "require": "./dist/main.cjs"
+      "import": {
+        "types": "./dist/main.d.mts",
+        "default": "./dist/main.mjs"
+      }
     }
   },
   "sideEffects": false,
