@@ -18,6 +18,9 @@ importers:
       '@ls-stack/eslint-cfg':
         specifier: ^0.5.1
         version: 0.5.1(jiti@2.6.1)(typescript@5.9.3)(vitest@4.0.18(@types/node@24.10.10)(jiti@2.6.1)(tsx@4.21.0))
+      '@ls-stack/pkg-manager':
+        specifier: ^0.2.1
+        version: 0.2.1(@types/node@24.10.10)
       '@ls-stack/utils':
         specifier: ^3.68.0
         version: 3.68.0
@@ -444,6 +447,10 @@ packages:
   '@leeoniya/ufuzzy@1.0.19':
     resolution: {integrity: sha512-0pikDeYt0IHEUPza5RTCDXc/17S1pTrYnReEMp8Aa6k1ovzw5QdZLwicW8TjljwEZRb6oYag0xmALohrcq/yOQ==}
 
+  '@ls-stack/cli@0.1.0':
+    resolution: {integrity: sha512-apdLt4RPEbTbC4hrQ+kydaviy0oQAIkPCS6tn1K22Rluv4POMM9e9TyVb340NOC4FBdKVXHobwnCfbYR9u+igQ==}
+    engines: {node: '>=21.5.0'}
+
   '@ls-stack/eslint-cfg@0.5.1':
     resolution: {integrity: sha512-ewJe+KqBI7WCdJNjfb4YGT1LTnWSdKdgsnfRkmQnoarDPWG2bI1hM4qKgB98sd5z/AbfDmJyGrEv+psjF9WN+w==}
     engines: {node: '>=21.5.0'}
@@ -454,6 +461,11 @@ packages:
     peerDependencies:
       eslint: ^9.9.1
       typescript: ^5.7.3
+
+  '@ls-stack/pkg-manager@0.2.1':
+    resolution: {integrity: sha512-W0XGivh6/bj1UGQS/g+n5sTuM4mXIvf6RcKhmgF/6me1Mx7UzsAWKFnl+i5IPkBLsrgkV9VCzcVfq8XmSZrt8w==}
+    engines: {node: '>=25.0.0'}
+    hasBin: true
 
   '@ls-stack/utils@3.68.0':
     resolution: {integrity: sha512-FauX6JhE8VLo/2ZB/doiUOxo2e2TD6ZpvN1eUe0+vKTEypbZaWnZ/TX0CVFS0prJvEjmz0jnMzF9fRwlBs9guQ==}
@@ -1691,6 +1703,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@babel/generator@8.0.0-rc.1':
@@ -2018,6 +2033,12 @@ snapshots:
 
   '@leeoniya/ufuzzy@1.0.19': {}
 
+  '@ls-stack/cli@0.1.0(@types/node@24.10.10)':
+    dependencies:
+      '@inquirer/prompts': 7.10.1(@types/node@24.10.10)
+    transitivePeerDependencies:
+      - '@types/node'
+
   '@ls-stack/eslint-cfg@0.5.1(jiti@2.6.1)(typescript@5.9.3)(vitest@4.0.18(@types/node@24.10.10)(jiti@2.6.1)(tsx@4.21.0))':
     dependencies:
       '@eslint/js': 9.39.2
@@ -2046,6 +2067,13 @@ snapshots:
       zod: 3.25.76
     transitivePeerDependencies:
       - supports-color
+
+  '@ls-stack/pkg-manager@0.2.1(@types/node@24.10.10)':
+    dependencies:
+      '@ls-stack/cli': 0.1.0(@types/node@24.10.10)
+      zod: 4.3.6
+    transitivePeerDependencies:
+      - '@types/node'
 
   '@ls-stack/utils@3.68.0':
     dependencies:
@@ -3190,3 +3218,5 @@ snapshots:
   yoctocolors-cjs@2.1.3: {}
 
   zod@3.25.76: {}
+
+  zod@4.3.6: {}

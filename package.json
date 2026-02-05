@@ -9,7 +9,8 @@
     "tsc": "tsc -p tsconfig.prod.json",
     "eslint": "CI=true eslint src/ scripts/ --color --max-warnings=0",
     "build": "pnpm lint && tsdown",
-    "build:no-test": "tsdown"
+    "build:no-test": "tsdown",
+    "pre-publish": "pnpm build"
   },
   "files": [
     "dist"
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@ls-stack/eslint-cfg": "^0.5.1",
+    "@ls-stack/pkg-manager": "^0.2.1",
     "@ls-stack/utils": "^3.68.0",
     "@types/node": "^24.7.1",
     "prettier": "3.6.2",
