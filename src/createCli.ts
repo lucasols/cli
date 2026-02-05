@@ -8,18 +8,6 @@ import { styleText } from 'node:util';
 
 const [, , cmdFromTerminal, ...cmdArgs] = process.argv;
 
-type Cmd = {
-  short?: string;
-  description: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- internal type
-  run: (...args: any[]) => Promise<void> | void;
-  args?: Record<string, Arg>;
-  examples?: {
-    args: string[];
-    description: string;
-  }[];
-};
-
 /**
  * Positional argument definition for CLI commands.
  *
@@ -88,6 +76,18 @@ export type Arg =
       name: string;
       description: string;
     };
+
+type Cmd = {
+  short?: string;
+  description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- internal type
+  run: (...args: any[]) => Promise<void> | void;
+  args?: Record<string, Arg>;
+  examples?: {
+    args: string[];
+    description: string;
+  }[];
+};
 
 type GetArgType<T extends Arg> =
   T extends PositionalArg ?
@@ -247,22 +247,20 @@ export async function createCLI<C extends string>(
   cmds: Record<C, Cmd>,
 ) {
   function getCmdId(cmd: string): C {
-    if (isObjKey(cmd, cmds)) {
-      return cmd;
-    }
+    if (isObjKey(cmd, cmds)) return cmd;
 
     console.error(styleText(['red', 'bold'], `Command '${cmd}' not found`));
     process.exit(1);
   }
 
-  console.clear();
+  process.stdout.write('\x1Bc'); // Clear console
 
   console.info(styleText(['blue', 'bold'], name));
 
   const addedShortCmds = new Set<string>();
   const reservedShortCmds = ['i', 'h'];
 
-  let runCmdId: C | undefined = cmdFromTerminal as C | undefined;
+  let runCmdId: string | undefined = cmdFromTerminal;
 
   for (const [, cmd] of typedObjectEntries(cmds)) {
     if (cmd.short) {
@@ -424,10 +422,10 @@ export async function createCLI<C extends string>(
           'green',
           'red',
         ] as const;
-        argEntries.forEach(([, arg], index) => {
+        for (const [index, [, arg]] of argEntries.entries()) {
           const color = colors[index % colors.length];
 
-          if (!color) return;
+          if (!color) continue;
 
           const argDisplayName =
             arg.type === 'flag' ? `--${arg.name}`
@@ -437,17 +435,15 @@ export async function createCLI<C extends string>(
           const argName = styleText([color], argDisplayName) || argDisplayName;
           const required = '';
           helpText += `\n  ${argName}${required} - ${arg.description}`;
-        });
+        }
       }
     }
 
     if (cmd.examples) {
       helpText += `\n\n${styleText(['bold', 'underline'], 'Examples:') || 'Examples:'}`;
-      cmd.examples.forEach(
-        ({ args: exampleArgs, description: exampleDesc }) => {
-          helpText += `\n  ${baseCmd} ${cmdId} ${exampleArgs.join(' ')} ${styleText(['dim'], `# ${exampleDesc}`) || `# ${exampleDesc}`}`;
-        },
-      );
+      for (const { args: exampleArgs, description: exampleDesc } of cmd.examples) {
+        helpText += `\n  ${baseCmd} ${cmdId} ${exampleArgs.join(' ')} ${styleText(['dim'], `# ${exampleDesc}`) || `# ${exampleDesc}`}`;
+      }
     }
 
     console.info(helpText);
@@ -474,7 +470,7 @@ export async function createCLI<C extends string>(
       printHelp();
       process.exit(0);
     } else {
-      runCmdId = 'i' as C;
+      runCmdId = 'i';
     }
   }
 
@@ -488,20 +484,22 @@ export async function createCLI<C extends string>(
     process.exit(0);
   }
 
-  function parseArgs(rawArgs: string[], commandArgs?: Record<string, Arg>): Record<string, any> {
+  type ParsedArgs = Record<string, string | number | boolean | undefined>;
+
+  function parseArgs(rawArgs: string[], commandArgs?: Record<string, Arg>): ParsedArgs {
     if (!commandArgs) return {};
 
-    const parsed: Record<string, any> = {};
+    const parsed: ParsedArgs = {};
     const argEntries = typedObjectEntries(commandArgs);
-    
+
     // Initialize with defaults
-    argEntries.forEach(([key, argDef]) => {
+    for (const [key, argDef] of argEntries) {
       if (argDef.type === 'flag') {
         parsed[key] = false;
       } else if ('default' in argDef && argDef.default !== undefined) {
         parsed[key] = argDef.default;
       }
-    });
+    }
 
     // Parse positional arguments (use object declaration order)
     const positionalArgs = argEntries
@@ -584,7 +582,7 @@ export async function createCLI<C extends string>(
   }
 
   async function runCmd(cmd: string, args: string[]) {
-    console.clear();
+    process.stdout.write('\x1Bc'); // Clear console
 
     for (const [cmdId, { short, run: fn, args: commandArgs }] of typedObjectEntries(cmds)) {
       if (cmd === short || cmd === cmdId) {

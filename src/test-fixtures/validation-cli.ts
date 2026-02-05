@@ -22,10 +22,10 @@ await createCLI(
           description: 'Configuration file path',
         },
       },
-      run: async (args) => {
-        console.log(`Starting server on port: ${args.port || 'default'}`);
-        if (args.timeout) console.log(`Timeout: ${args.timeout}s`);
-        if (args.config) console.log(`Config: ${args.config}`);
+      run: (args) => {
+        console.info(`Starting server on port: ${args.port || 'default'}`);
+        if (args.timeout) console.info(`Timeout: ${args.timeout}s`);
+        if (args.config) console.info(`Config: ${args.config}`);
       },
     }),
   },

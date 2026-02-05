@@ -25,11 +25,12 @@ function runCLI(fixture: string, args: string[] = []): CLIResult {
       exitCode: 0,
     };
   } catch (error: unknown) {
-    const execError = error as { stdout?: string; stderr?: string; status?: number };
+    const execError: { stdout?: string; stderr?: string; status?: number } =
+      typeof error === 'object' && error !== null ? error : {};
     return {
-      stdout: removeANSIColors(execError.stdout || ''),
-      stderr: removeANSIColors(execError.stderr || ''),
-      exitCode: execError.status || 1,
+      stdout: removeANSIColors(execError.stdout ?? ''),
+      stderr: removeANSIColors(execError.stderr ?? ''),
+      exitCode: execError.status ?? 1,
     };
   }
 }

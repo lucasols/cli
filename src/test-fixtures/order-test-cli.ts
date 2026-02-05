@@ -27,11 +27,11 @@ await createCLI(
           description: 'Enable verbose output',
         },
       },
-      run: async (args) => {
-        console.log(`First: ${args.first}`);
-        console.log(`Second: ${args.second}`);
-        console.log(`Third: ${args.third}`);
-        if (args.verbose) console.log('Verbose enabled');
+      run: (args) => {
+        console.info(`First: ${args.first}`);
+        console.info(`Second: ${args.second}`);
+        console.info(`Third: ${args.third}`);
+        if (args.verbose) console.info('Verbose enabled');
       },
     }),
   },

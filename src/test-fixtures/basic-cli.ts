@@ -6,8 +6,8 @@ await createCLI(
     'hello': createCmd({
       description: 'Say hello to someone',
       short: 'hi',
-      run: async () => {
-        console.log('Hello World!');
+      run: () => {
+        console.info('Hello World!');
       },
     }),
   },

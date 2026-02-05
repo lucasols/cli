@@ -28,10 +28,10 @@ await createCLI(
         { args: ['my-project'], description: 'Create project with default template' },
         { args: ['my-project', '--template', 'react'], description: 'Create React project' },
       ],
-      run: async (args) => {
-        console.log(`Creating project: ${args.name || 'unnamed'}`);
-        console.log(`Template: ${args.template || 'basic'}`);
-        if (args.verbose) console.log('Verbose mode enabled');
+      run: (args) => {
+        console.info(`Creating project: ${args.name || 'unnamed'}`);
+        console.info(`Template: ${args.template || 'basic'}`);
+        if (args.verbose) console.info('Verbose mode enabled');
       },
     }),
     'deploy': createCmd({
@@ -50,15 +50,15 @@ await createCLI(
           description: 'Environment to deploy to',
         },
       },
-      run: async (args) => {
-        console.log(`Deploying on port: ${args.port || 3000}`);
-        if (args.env) console.log(`Environment: ${args.env}`);
+      run: (args) => {
+        console.info(`Deploying on port: ${args.port || 3000}`);
+        if (args.env) console.info(`Environment: ${args.env}`);
       },
     }),
     'status': createCmd({
       description: 'Check application status',
-      run: async () => {
-        console.log('Application is running');
+      run: () => {
+        console.info('Application is running');
       },
     }),
   },
