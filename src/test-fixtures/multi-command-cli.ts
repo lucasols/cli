@@ -38,12 +38,12 @@ const create = createCmd({
   },
 });
 
-create.run({ name: undefined, template: 'd', verbose: true });
+void create.run({ name: undefined, template: 'd', verbose: true });
 
 await createCLI(
   { name: 'Multi Command CLI', baseCmd: 'multi-cli' },
   {
-    create: create,
+    create,
     deploy: createCmd({
       description: 'Deploy the application',
       short: 'd',
