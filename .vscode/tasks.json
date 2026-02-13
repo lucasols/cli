@@ -8,7 +8,10 @@
       "type": "shell",
       "problemMatcher": [],
       "icon": { "id": "package" },
-      "command": "pnpm exec pkg-manager publish"
+      "command": "pnpm exec pkg-manager publish",
+      "presentation": {
+        "focus": true
+      }
     }
   ]
 }
