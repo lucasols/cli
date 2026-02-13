@@ -243,15 +243,17 @@ export const cliInput = {
     {
       initial,
       validate,
+      optional = false,
     }: {
       initial?: string;
       validate?: ValidateFn;
+      optional?: boolean;
     } = {},
   ): Promise<string> => {
     try {
       return await withEscapeSupport((signal) =>
         input(
-          { message: title, default: initial, required: true, validate },
+          { message: title, default: initial, required: !optional, validate },
           { signal },
         ),
       );
@@ -352,15 +354,19 @@ export const cliInput = {
    */
   number: async (
     title: string,
-    { initial }: { initial?: number } = {},
+    {
+      initial,
+      optional = false,
+    }: { initial?: number; optional?: boolean } = {},
   ): Promise<number | null> => {
     try {
-      return await withEscapeSupport((signal) =>
+      const result = await withEscapeSupport((signal) =>
         number(
-          { message: title, default: initial, required: true },
+          { message: title, default: initial, required: !optional },
           { signal },
         ),
       );
+      return result ?? null;
     } catch (e) {
       if (isUserCancellation(e)) {
         process.exit(0);
