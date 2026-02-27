@@ -2,16 +2,18 @@ import { removeANSIColors } from '@ls-stack/utils/stringUtils';
 import { execSync } from 'child_process';
 import { describe, expect, it } from 'vitest';
 
+// ESC+c (Reset Terminal) sequence
+const escReset = new RegExp(`${String.fromCharCode(0x1b)}c`, 'g');
+
+function stripTerminalOutput(str: string): string {
+  return removeANSIColors(str.replace(escReset, ''));
+}
+
 type CLIResult = {
   stdout: string;
   stderr: string;
   exitCode: number;
 };
-
-function stripTerminalOutput(str: string): string {
-  // Remove ESC+c (Reset Terminal) sequences, then remove ANSI color codes
-  return removeANSIColors(str.replace(/\x1Bc/g, ''));
-}
 
 function runCLI(fixture: string, args: string[] = []): CLIResult {
   const fixturePath = `src/test-fixtures/${fixture}`;
