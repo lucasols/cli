@@ -8,6 +8,11 @@ type CLIResult = {
   exitCode: number;
 };
 
+function stripTerminalOutput(str: string): string {
+  // Remove ESC+c (Reset Terminal) sequences, then remove ANSI color codes
+  return removeANSIColors(str.replace(/\x1Bc/g, ''));
+}
+
 function runCLI(fixture: string, args: string[] = []): CLIResult {
   const fixturePath = `src/test-fixtures/${fixture}`;
   const command = `tsx ${fixturePath} ${args.join(' ')}`.trim();
@@ -20,7 +25,7 @@ function runCLI(fixture: string, args: string[] = []): CLIResult {
     });
 
     return {
-      stdout: removeANSIColors(stdout),
+      stdout: stripTerminalOutput(stdout),
       stderr: '',
       exitCode: 0,
     };
@@ -28,8 +33,8 @@ function runCLI(fixture: string, args: string[] = []): CLIResult {
     const execError: { stdout?: string; stderr?: string; status?: number } =
       typeof error === 'object' && error !== null ? error : {};
     return {
-      stdout: removeANSIColors(execError.stdout ?? ''),
-      stderr: removeANSIColors(execError.stderr ?? ''),
+      stdout: stripTerminalOutput(execError.stdout ?? ''),
+      stderr: stripTerminalOutput(execError.stderr ?? ''),
       exitCode: execError.status ?? 1,
     };
   }

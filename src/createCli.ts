@@ -626,16 +626,58 @@ export async function createCLI<C extends string>(
     }
 
     const availableCmds = cmdEntries.filter(([, cmd]) => !hasRequiredArgs(cmd.args));
+    const cmdsWithRequiredArgs = cmdEntries.filter(([, cmd]) => hasRequiredArgs(cmd.args));
 
-    const response = await cliInput.select('Select a command', {
-      options: availableCmds.map(([cmd, { short, description }]) => ({
+    const selectOptions = [
+      ...availableCmds.map(([cmd, { short, description }]) => ({
         value: cmd,
         label: short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd,
         hint: description,
       })),
+      ...(cmdsWithRequiredArgs.length > 0
+        ? [{ value: '__run_with_args__', label: styleText(['dim'], 'Run command with required args...') }]
+        : []),
+    ];
+
+    const response = await cliInput.select('Select a command', {
+      options: selectOptions,
     });
 
-    await runCmd(response, []);
+    if (response === '__run_with_args__') {
+      const selectedCmd = await cliInput.select('Select a command', {
+        options: cmdsWithRequiredArgs.map(([cmd, { short, description }]) => ({
+          value: cmd,
+          label: short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd,
+          hint: description,
+        })),
+      });
+
+      const cmdDef = cmds[selectedCmd];
+      const collectedArgs: string[] = [];
+
+      if (cmdDef.args) {
+        for (const [, arg] of typedObjectEntries(cmdDef.args)) {
+          if (
+            (arg.type === 'positional-string' || arg.type === 'positional-number') &&
+            !('default' in arg)
+          ) {
+            if (arg.type === 'positional-string') {
+              const value = await cliInput.text(arg.name);
+              collectedArgs.push(value);
+            } else {
+              const value = await cliInput.number(arg.name);
+              if (value !== null) {
+                collectedArgs.push(String(value));
+              }
+            }
+          }
+        }
+      }
+
+      await runCmd(selectedCmd, collectedArgs);
+    } else {
+      await runCmd(response, []);
+    }
   } else {
     if (!runCmdId) {
       console.error(

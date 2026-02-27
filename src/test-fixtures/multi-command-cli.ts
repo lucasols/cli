@@ -38,8 +38,6 @@ const create = createCmd({
   },
 });
 
-void create.run({ name: undefined, template: 'd', verbose: true });
-
 await createCLI(
   { name: 'Multi Command CLI', baseCmd: 'multi-cli' },
   {
