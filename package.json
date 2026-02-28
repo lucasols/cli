@@ -1,7 +1,7 @@
 {
   "name": "@ls-stack/cli",
   "description": "CLI input utilities for interactive prompts",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "MIT",
   "scripts": {
     "test": "tsx scripts/test-cli.ts",
