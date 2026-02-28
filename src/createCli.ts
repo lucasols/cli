@@ -451,27 +451,7 @@ export async function createCLI<C extends string>(
   }
 
   if (!cmdFromTerminal) {
-    const response = await cliInput.select('Choose an action', {
-      options: [
-        {
-          value: 'run-cmd',
-          label: 'Start interactive mode',
-          hint: `Select a command to run from a list | ${baseCmd} i`,
-        },
-        {
-          value: 'print-help',
-          label: 'Print help',
-          hint: `${baseCmd} h`,
-        },
-      ],
-    });
-
-    if (response === 'print-help') {
-      printHelp();
-      process.exit(0);
-    } else {
-      runCmdId = 'i';
-    }
+    runCmdId = 'i';
   }
 
   if (
