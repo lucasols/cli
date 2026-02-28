@@ -83,6 +83,7 @@ type Cmd = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- internal type
   run: (...args: any[]) => Promise<void> | void;
   args?: Record<string, Arg>;
+  hideInInteractiveMode?: boolean;
   examples?: {
     args: string[];
     description: string;
@@ -165,11 +166,13 @@ export function createCmd<Args extends undefined | Record<string, Arg>>({
   description,
   run,
   args,
+  hideInInteractiveMode,
   examples,
 }: {
   short?: string;
   description: string;
   args?: Args;
+  hideInInteractiveMode?: boolean;
   run: (cmdArgs: {
     [K in keyof Args]: Args[K] extends Arg ? GetArgType<Args[K]> : never;
   }) => Promise<void> | void;
@@ -183,6 +186,7 @@ export function createCmd<Args extends undefined | Record<string, Arg>>({
     description,
     run,
     args,
+    hideInInteractiveMode,
     examples,
   };
 }
@@ -605,59 +609,53 @@ export async function createCLI<C extends string>(
       );
     }
 
-    const availableCmds = cmdEntries.filter(([, cmd]) => !hasRequiredArgs(cmd.args));
-    const cmdsWithRequiredArgs = cmdEntries.filter(([, cmd]) => hasRequiredArgs(cmd.args));
+    const visibleCmds = cmdEntries.filter(([, cmd]) => !cmd.hideInInteractiveMode);
+    const cmdsWithoutRequiredArgs = visibleCmds.filter(([, cmd]) => !hasRequiredArgs(cmd.args));
+    const cmdsWithRequiredArgs = visibleCmds.filter(([, cmd]) => hasRequiredArgs(cmd.args));
 
-    const selectOptions = [
-      ...availableCmds.map(([cmd, { short, description }]) => ({
-        value: cmd,
-        label: short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd,
-        hint: description,
-      })),
-      ...(cmdsWithRequiredArgs.length > 0
-        ? [{ value: '__run_with_args__', label: styleText(['dim'], 'Run command with required args...') }]
-        : []),
-    ];
+    function formatLabel(cmd: string, short: string | undefined, suffix: string) {
+      const base = short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd;
+      return suffix ? `${base} ${styleText(['dim'], suffix)}` : base;
+    }
 
     const response = await cliInput.select('Select a command', {
-      options: selectOptions,
-    });
-
-    if (response === '__run_with_args__') {
-      const selectedCmd = await cliInput.select('Select a command', {
-        options: cmdsWithRequiredArgs.map(([cmd, { short, description }]) => ({
+      options: [
+        ...cmdsWithoutRequiredArgs.map(([cmd, { short, description }]) => ({
           value: cmd,
-          label: short ? `${cmd} ${styleText(['dim'], '|')} ${short}` : cmd,
+          label: formatLabel(cmd, short, ''),
           hint: description,
         })),
-      });
+        ...cmdsWithRequiredArgs.map(([cmd, { short, description }]) => ({
+          value: cmd,
+          label: formatLabel(cmd, short, '*'),
+          hint: description,
+        })),
+      ],
+    });
 
-      const cmdDef = cmds[selectedCmd];
-      const collectedArgs: string[] = [];
+    const cmdDef = cmds[response];
+    const collectedArgs: string[] = [];
 
-      if (cmdDef.args) {
-        for (const [, arg] of typedObjectEntries(cmdDef.args)) {
-          if (
-            (arg.type === 'positional-string' || arg.type === 'positional-number') &&
-            !('default' in arg)
-          ) {
-            if (arg.type === 'positional-string') {
-              const value = await cliInput.text(arg.name);
-              collectedArgs.push(value);
-            } else {
-              const value = await cliInput.number(arg.name);
-              if (value !== null) {
-                collectedArgs.push(String(value));
-              }
+    if (cmdDef.args && hasRequiredArgs(cmdDef.args)) {
+      for (const [, arg] of typedObjectEntries(cmdDef.args)) {
+        if (
+          (arg.type === 'positional-string' || arg.type === 'positional-number') &&
+          !('default' in arg)
+        ) {
+          if (arg.type === 'positional-string') {
+            const value = await cliInput.text(arg.name);
+            collectedArgs.push(value);
+          } else {
+            const value = await cliInput.number(arg.name);
+            if (value !== null) {
+              collectedArgs.push(String(value));
             }
           }
         }
       }
-
-      await runCmd(selectedCmd, collectedArgs);
-    } else {
-      await runCmd(response, []);
     }
+
+    await runCmd(response, collectedArgs);
   } else {
     if (!runCmdId) {
       console.error(
