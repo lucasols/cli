@@ -5,6 +5,7 @@ import { dedent } from '@ls-stack/utils/dedent';
 import { removeANSIColors } from '@ls-stack/utils/stringUtils';
 import { isObjKey, typedObjectEntries } from '@ls-stack/utils/typingFnUtils';
 import { styleText } from 'node:util';
+import { isInteractiveTerminal } from './interactiveTerminal.ts';
 
 const [, , cmdFromTerminal, ...cmdArgs] = process.argv;
 
@@ -257,7 +258,15 @@ export async function createCLI<C extends string>(
     process.exit(1);
   }
 
-  process.stdout.write('\x1Bc'); // Clear console
+  const interactiveTerminal = isInteractiveTerminal();
+
+  function clearConsole() {
+    if (interactiveTerminal) {
+      process.stdout.write('\x1Bc');
+    }
+  }
+
+  clearConsole();
 
   console.info(styleText(['blue', 'bold'], name));
 
@@ -455,6 +464,11 @@ export async function createCLI<C extends string>(
   }
 
   if (!cmdFromTerminal) {
+    if (!interactiveTerminal) {
+      printHelp();
+      process.exit(0);
+    }
+
     runCmdId = 'i';
   }
 
@@ -566,7 +580,7 @@ export async function createCLI<C extends string>(
   }
 
   async function runCmd(cmd: string, args: string[]) {
-    process.stdout.write('\x1Bc'); // Clear console
+    clearConsole();
 
     for (const [cmdId, { short, run: fn, args: commandArgs }] of typedObjectEntries(cmds)) {
       if (cmd === short || cmd === cmdId) {
@@ -592,6 +606,16 @@ export async function createCLI<C extends string>(
   }
 
   if (runCmdId === 'i') {
+    if (!interactiveTerminal) {
+      console.error(
+        styleText(
+          ['red', 'bold'],
+          `Interactive mode requires stdin and stdout to be connected to a TTY. Use \`${baseCmd} h\` to list the available commands.`,
+        ),
+      );
+      process.exit(1);
+    }
+
     function hasRequiredArgs(args?: Record<string, Arg>): boolean {
       if (!args) return false;
       return typedObjectEntries(args).some(

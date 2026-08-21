@@ -23,6 +23,10 @@ const proceed = await cliInput.confirm('Continue?', { initial: true });
 console.log(`Hello, ${name}!`);
 ```
 
+Interactive prompts require stdin and stdout to be connected to a TTY. They
+exit with an error in non-interactive environments instead of waiting for input
+that cannot be provided.
+
 ## API Reference
 
 ### Types
@@ -338,6 +342,11 @@ my-cli d prod             # Run deploy via short alias
 my-cli deploy -h          # Show deploy command help
 my-cli deploy prod --port 8080 --verbose
 ```
+
+When no command is provided, the interactive menu is opened only if both stdin
+and stdout are connected to a TTY. In non-interactive environments such as CI
+or piped commands, the CLI prints its help instead. Explicitly requesting `i`
+without a TTY exits with an error.
 
 ### Complete Example
 

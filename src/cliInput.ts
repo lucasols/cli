@@ -7,6 +7,10 @@ import {
   select,
 } from '@inquirer/prompts';
 import * as readline from 'readline';
+import { isInteractiveTerminal } from './interactiveTerminal.ts';
+
+const nonInteractiveTerminalMessage =
+  'Interactive prompts require stdin and stdout to be connected to a TTY.';
 
 function isUserCancellation(e: unknown): boolean {
   return (
@@ -56,6 +60,11 @@ function createEscapeAbortController(): {
 async function withEscapeSupport<T>(
   promptFn: (signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
+  if (!isInteractiveTerminal()) {
+    console.error(nonInteractiveTerminalMessage);
+    process.exit(1);
+  }
+
   const { signal, cleanup } = createEscapeAbortController();
 
   try {
