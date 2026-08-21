@@ -485,10 +485,8 @@ export async function createCLI<C extends string>(
   type ParsedArgs = Record<string, string | number | boolean | undefined>;
 
   function parseArgs(rawArgs: string[], commandArgs?: Record<string, Arg>): ParsedArgs {
-    if (!commandArgs) return {};
-
     const parsed: ParsedArgs = {};
-    const argEntries = typedObjectEntries(commandArgs);
+    const argEntries = typedObjectEntries(commandArgs ?? {});
 
     // Initialize with defaults
     for (const [key, argDef] of argEntries) {
@@ -547,23 +545,34 @@ export async function createCLI<C extends string>(
         }
       } else {
         // Handle positional arguments
-        if (positionalIndex < positionalArgs.length) {
-          const positionalEntry = positionalArgs[positionalIndex];
-          if (positionalEntry) {
-            const [key, argDef] = positionalEntry;
-            if (argDef.type === 'positional-number') {
-              const numValue = Number(currentArg);
-              if (isNaN(numValue)) {
-                console.error(styleText(['red', 'bold'], `Error: Invalid number "${currentArg}" for ${argDef.name}`));
-                process.exit(1);
-              }
-              parsed[key] = numValue;
-            } else {
-              parsed[key] = currentArg;
-            }
-            positionalIndex++;
-          }
+        const positionalEntry = positionalArgs[positionalIndex];
+        if (!positionalEntry) {
+          console.error(
+            styleText(
+              ['red', 'bold'],
+              `Error: Unexpected argument "${currentArg}"`,
+            ),
+          );
+          process.exit(1);
         }
+
+        const [key, argDef] = positionalEntry;
+        if (argDef.type === 'positional-number') {
+          const numValue = Number(currentArg);
+          if (isNaN(numValue)) {
+            console.error(
+              styleText(
+                ['red', 'bold'],
+                `Error: Invalid number "${currentArg}" for ${argDef.name}`,
+              ),
+            );
+            process.exit(1);
+          }
+          parsed[key] = numValue;
+        } else {
+          parsed[key] = currentArg;
+        }
+        positionalIndex++;
         i++;
       }
     }
