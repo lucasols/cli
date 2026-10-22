@@ -115,6 +115,16 @@ export type SelectOption<T extends string> = {
 };
 
 /**
+ * Option configuration for multi-select prompts.
+ *
+ * @template T - The string literal type for the option value
+ */
+export type MultipleSelectOption<T extends string> = SelectOption<T> & {
+  /** Whether the option starts checked (defaults to false) */
+  checked?: boolean;
+};
+
+/**
  * Interactive CLI input utilities with ESC-to-cancel support.
  *
  * All prompts exit the process with code 0 when the user presses ESC or Ctrl+C.
@@ -314,7 +324,7 @@ export const cliInput = {
    *   options: [
    *     { value: 'typescript', label: 'TypeScript' },
    *     { value: 'eslint', label: 'ESLint' },
-   *     { value: 'prettier', label: 'Prettier' },
+   *     { value: 'prettier', label: 'Prettier', checked: true },
    *   ],
    * });
    * // features: ('typescript' | 'eslint' | 'prettier')[]
@@ -322,7 +332,7 @@ export const cliInput = {
    */
   multipleSelect: async <T extends string>(
     title: string,
-    { options }: { options: SelectOption<T>[] },
+    { options }: { options: MultipleSelectOption<T>[] },
   ): Promise<T[]> => {
     try {
       return await withEscapeSupport((signal) =>
@@ -334,6 +344,7 @@ export const cliInput = {
               value: option.value,
               name: option.label ?? option.value,
               description: option.hint,
+              checked: option.checked,
             })),
           },
           { signal },

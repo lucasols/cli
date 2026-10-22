@@ -81,7 +81,12 @@ const features = await cliInput.multipleSelect<'ts' | 'eslint' | 'prettier'>(
     options: [
       { value: 'ts', label: 'TypeScript' },
       { value: 'eslint', label: 'ESLint', hint: 'Code linting' },
-      { value: 'prettier', label: 'Prettier', hint: 'Code formatting' },
+      {
+        value: 'prettier',
+        label: 'Prettier',
+        hint: 'Code formatting',
+        checked: true,
+      },
     ],
   },
 );
@@ -93,7 +98,7 @@ const features = await cliInput.multipleSelect<'ts' | 'eslint' | 'prettier'>(
 | Name              | Type                | Description                 |
 | ----------------- | ------------------- | --------------------------- |
 | `title`           | `string`            | The prompt message          |
-| `options.options` | `SelectOption<T>[]` | Array of selectable options |
+| `options.options` | `MultipleSelectOption<T>[]` | Array of selectable options (`checked` starts it selected) |
 
 **Returns:** `Promise<T[]>` - Array of selected values
 

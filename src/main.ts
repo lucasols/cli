@@ -1,5 +1,10 @@
 /* eslint-disable @ls-stack/no-reexport -- This is the entry point, re-exports are intentional */
-export { cliInput, type SelectOption, type ValidateFn } from './cliInput.ts';
+export {
+  cliInput,
+  type MultipleSelectOption,
+  type SelectOption,
+  type ValidateFn,
+} from './cliInput.ts';
 export {
   createCLI,
   createCmd,
